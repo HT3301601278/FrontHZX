@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { register, login } from '@/api/user';
 
 export default {
   namespaced: true,
@@ -21,36 +21,29 @@ export default {
     },
   },
   actions: {
-    async login({ commit }, credentials) {
-      try {
-        const response = await axios.post('/api/login', credentials);
-        commit('SET_USER', response.data.user);
-        commit('SET_TOKEN', response.data.token);
-        return response.data.user;
-      } catch (error) {
-        console.error('Login error:', error);
-        throw error;
-      }
-    },
     async register({ commit }, userData) {
       try {
-        const response = await axios.post('/api/register', userData);
-        commit('SET_USER', response.data.user);
-        commit('SET_TOKEN', response.data.token);
-        return response.data.user;
+        const response = await register(userData);
+        commit('SET_USER', response);
+        commit('SET_TOKEN', response.token);
+        return response;
       } catch (error) {
         console.error('Registration error:', error);
-        throw error;
+        throw error.response?.data || error.message || '注册失败';
       }
     },
-    async updateProfile({ commit }, userData) {
+    async login({ commit }, credentials) {
       try {
-        const response = await axios.put('/api/user/profile', userData);
-        commit('SET_USER', response.data);
-        return response.data;
+        const response = await login(credentials);
+        commit('SET_USER', response);
+        // 由于后端没有返回 token，我们可以使用用户 ID 作为临时的身份验证标识
+        commit('SET_TOKEN', response.id.toString());
+        return response;
       } catch (error) {
-        console.error('Profile update error:', error);
-        throw error;
+        console.error('Login error:', error);
+        console.error('Error response:', error.response);
+        console.error('Error message:', error.message);
+        throw error.response?.data || error.message || '登录失败';
       }
     },
     logout({ commit }) {
@@ -58,7 +51,7 @@ export default {
     },
   },
   getters: {
-    isAuthenticated: (state) => !!state.token,
+    isAuthenticated: (state) => !!state.user,
     getUser: (state) => state.user,
   },
 };
