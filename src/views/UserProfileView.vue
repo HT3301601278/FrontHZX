@@ -43,7 +43,7 @@
     name: 'UserProfileView',
     setup() {
       const store = useStore();
-      const user = computed(() => store.state.user.currentUser);
+      const user = computed(() => store.getters['user/getUser']); // 修改这里
       const isEditing = ref(false);
       const editedUser = ref({});
       const confirmPassword = ref('');
