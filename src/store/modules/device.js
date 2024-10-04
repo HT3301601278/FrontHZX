@@ -36,7 +36,7 @@ export default {
     },
     async addDevice({ commit }, deviceData) {
       try {
-        const response = await axios.post('/api/devices', deviceData);
+        const response = await axios.post(`${API_URL}/devices`, deviceData);
         commit('ADD_DEVICE', response.data);
         return response.data;
       } catch (error) {
@@ -46,7 +46,7 @@ export default {
     },
     async deleteDevice({ commit }, deviceId) {
       try {
-        await axios.delete(`/api/devices/${deviceId}`);
+        await axios.delete(`${API_URL}/devices/${deviceId}`);
         commit('REMOVE_DEVICE', deviceId);
       } catch (error) {
         console.error('Error deleting device:', error);
@@ -54,9 +54,15 @@ export default {
       }
     },
     async toggleDeviceStatus({ commit }, deviceId) {
-      // 假设我们有一个toggleDeviceStatus API
-      const updatedDevice = await toggleDeviceStatus(deviceId);
-      commit('UPDATE_DEVICE', updatedDevice);
+      try {
+        // 假设我们有一个toggleDeviceStatus API
+        const response = await axios.post(`${API_URL}/devices/${deviceId}/toggle`);
+        commit('UPDATE_DEVICE', response.data);
+        return response.data;
+      } catch (error) {
+        console.error('Error toggling device status:', error);
+        throw error;
+      }
     },
   },
   getters: {
