@@ -1,12 +1,13 @@
 <template>
     <div class="weather-detail-view">
       <h2>天气数据详情</h2>
-      <button @click="refreshWeatherData">刷新数据</button>
-      <CitySelector @city-changed="handleCityChange" />
+      <CitySelector @city-selected="handleCitySelected" />
       <DateRangePicker @date-range-changed="handleDateRangeChange" />
+      <el-button type="primary" @click="fetchWeatherData" :disabled="!selectedCity.name || !dateRange.startDate || !dateRange.endDate">查询</el-button>
+      <el-button type="primary" @click="updateWeatherData" :disabled="!selectedCity.id">更新数据</el-button>
       <div v-if="error" class="error-message">{{ error }}</div>
-      <WeatherChart v-if="!error" :chartData="chartData" />
-      <WeatherDataList v-if="!error" :weatherData="weatherData" />
+      <WeatherChart v-if="!error && chartData" :chartData="chartData" />
+      <WeatherDataList v-if="!error && weatherData.length" :weatherData="weatherData" />
     </div>
   </template>
   
@@ -17,7 +18,9 @@
   import DateRangePicker from '@/components/DateRangePicker.vue';
   import WeatherChart from '@/components/WeatherChart.vue';
   import WeatherDataList from '@/components/WeatherDataList.vue';
-  
+  import axios from 'axios';
+  import { ElMessage } from 'element-plus';
+
   export default {
     name: 'WeatherDetailView',
     components: {
@@ -30,21 +33,48 @@
       const store = useStore();
       const chartData = ref(null);
       const weatherData = ref([]);
-      const selectedCity = ref('');
+      const selectedCity = ref({ id: '', name: '' });
       const dateRange = ref({ startDate: '', endDate: '' });
       const error = ref(null);
 
-      const fetchWeatherData = async () => {
-        if (selectedCity.value && dateRange.value.startDate && dateRange.value.endDate) {
+      const handleCitySelected = (city) => {
+        selectedCity.value = city;
+      };
+
+      const updateWeatherData = async () => {
+        if (selectedCity.value.id) {
           try {
-            await store.dispatch('weather/fetchWeatherByCityAndDateRange', {
-              city: selectedCity.value,
-              startDate: dateRange.value.startDate,
-              endDate: dateRange.value.endDate
+            const response = await axios.post(`http://localhost:8080/api/weather/update/${selectedCity.value.id}`);
+            console.log('Weather data updated:', response.data);
+            ElMessage.success('天气数据已成功更新');
+          } catch (err) {
+            console.error('更新天气数据失败:', err);
+            error.value = err.message || '更新天气数据失败';
+            ElMessage.error(error.value);
+          }
+        }
+      };
+
+      const fetchWeatherData = async () => {
+        if (selectedCity.value.name && dateRange.value.startDate && dateRange.value.endDate) {
+          try {
+            const response = await axios.get(`http://localhost:8080/api/weather/city/${encodeURIComponent(selectedCity.value.name)}/date-range`, {
+              params: {
+                startDate: dateRange.value.startDate,
+                endDate: dateRange.value.endDate
+              }
             });
-            chartData.value = store.getters['weather/getChartData'];
-            weatherData.value = store.getters['weather/getWeatherData'];
-            error.value = null;
+            const data = response.data;
+            console.log('Received data:', data);
+            if (Array.isArray(data) && data.length > 0 && Array.isArray(data[0].dailyWeatherList)) {
+              console.log('Weather data:', data[0].dailyWeatherList);
+              weatherData.value = data[0].dailyWeatherList;
+              console.log('Processed chart data:', processChartData(data[0].dailyWeatherList));
+              chartData.value = processChartData(data[0].dailyWeatherList);
+              error.value = null;
+            } else {
+              throw new Error('Invalid data format received from server');
+            }
           } catch (err) {
             console.error('获取天气数据失败:', err);
             error.value = err.message || '获取天气数据失败';
@@ -54,9 +84,37 @@
         }
       };
 
-      const handleCityChange = (city) => {
-        selectedCity.value = city;
-        fetchWeatherData();
+      const processChartData = (weatherData) => {
+        console.log('Processing chart data:', weatherData);
+        if (!Array.isArray(weatherData) || weatherData.length === 0) {
+          console.log('Weather data is empty or not an array');
+          return null;
+        }
+
+        const labels = weatherData.map(item => item.date);
+        const dayTemperatures = weatherData.map(item => parseInt(item.temDay) || 0);
+        const nightTemperatures = weatherData.map(item => parseInt(item.temNight) || 0);
+
+        const chartData = {
+          labels,
+          datasets: [
+            {
+              label: '白天温度 (°C)',
+              data: dayTemperatures,
+              borderColor: 'rgb(75, 192, 192)',
+              tension: 0.1,
+            },
+            {
+              label: '夜间温度 (°C)',
+              data: nightTemperatures,
+              borderColor: 'rgb(255, 99, 132)',
+              tension: 0.1,
+            },
+          ],
+        };
+
+        console.log('Processed chart data:', chartData);
+        return chartData;
       };
 
       const handleDateRangeChange = (range) => {
@@ -64,28 +122,16 @@
         fetchWeatherData();
       };
 
-      const refreshWeatherData = async () => {
-        await fetchWeatherData();
-      };
-
-      onMounted(() => {
-        selectedCity.value = '北京';
-        const today = new Date();
-        const oneWeekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-        dateRange.value = {
-          startDate: oneWeekAgo.toISOString().split('T')[0],
-          endDate: today.toISOString().split('T')[0]
-        };
-        fetchWeatherData();
-      });
-
       return {
         chartData,
         weatherData,
         error,
-        handleCityChange,
+        selectedCity,
+        dateRange,
+        handleCitySelected,
         handleDateRangeChange,
-        refreshWeatherData
+        updateWeatherData,
+        fetchWeatherData
       };
     }
   };

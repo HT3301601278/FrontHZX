@@ -5,17 +5,23 @@
         <thead>
           <tr>
             <th>日期</th>
-            <th>城市</th>
-            <th>温度 (°C)</th>
-            <th>天气状况</th>
+            <th>天气</th>
+            <th>白天天气</th>
+            <th>夜间天气</th>
+            <th>白天温度 (°C)</th>
+            <th>夜间温度 (°C)</th>
+            <th>风况</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="item in weatherData" :key="item.id">
             <td>{{ formatDate(item.date) }}</td>
-            <td>{{ item.city }}</td>
-            <td>{{ item.temperature }}</td>
-            <td>{{ item.condition }}</td>
+            <td>{{ item.wea }}</td>
+            <td>{{ item.weaDay }}</td>
+            <td>{{ item.weaNight }}</td>
+            <td>{{ item.temDay }}</td>
+            <td>{{ item.temNight }}</td>
+            <td>{{ item.win }}</td>
           </tr>
         </tbody>
       </table>
@@ -36,7 +42,7 @@
         const date = new Date(dateString);
         return date.toLocaleDateString();
       };
-  
+
       return {
         formatDate
       };
@@ -48,18 +54,18 @@
   .weather-data-list {
     margin-top: 20px;
   }
-  
+
   table {
     width: 100%;
     border-collapse: collapse;
   }
-  
+
   th, td {
     border: 1px solid #ddd;
     padding: 8px;
     text-align: left;
   }
-  
+
   th {
     background-color: #f2f2f2;
   }
