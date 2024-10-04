@@ -11,7 +11,7 @@
             </template>
             <el-row :gutter="20">
               <el-col :span="12">
-                <WeatherOverview />
+                <WeatherOverview :weatherData="weatherData" />
               </el-col>
               <el-col :span="12">
                 <DeviceOverview />
@@ -29,7 +29,7 @@
                 <span>天气趋势</span>
               </div>
             </template>
-            <WeatherTrend />
+            <WeatherTrend :weatherData="weatherData" />
           </el-card>
         </el-col>
       </el-row>
@@ -37,11 +37,12 @@
 </template>
 
 <script>
-import { ref } from 'vue';
-import { ElRow, ElCol, ElCard, ElButton } from 'element-plus';
+import { ref, onMounted } from 'vue';
+import { ElRow, ElCol, ElCard, ElButton, ElMessage } from 'element-plus';
 import WeatherOverview from '@/components/WeatherOverview.vue';
 import DeviceOverview from '@/components/DeviceOverview.vue';
 import WeatherTrend from '@/components/WeatherTrend.vue';
+import axios from 'axios';
 
 export default {
   name: 'DashboardView',
@@ -55,12 +56,24 @@ export default {
     WeatherTrend
   },
   setup() {
-    const refreshData = () => {
-      // 实现刷新数据的逻辑
+    const weatherData = ref(null);
+
+    const refreshData = async () => {
+      try {
+        const response = await axios.post('http://localhost:8080/api/weather/update/CN101070101');
+        weatherData.value = response.data;
+        ElMessage.success('数据刷新成功');
+      } catch (error) {
+        console.error('刷新数据失败:', error);
+        ElMessage.error('刷新数据失败');
+      }
     };
 
+    onMounted(refreshData);
+
     return {
-      refreshData
+      refreshData,
+      weatherData
     };
   }
 };

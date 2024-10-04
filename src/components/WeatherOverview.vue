@@ -1,70 +1,57 @@
 <template>
-    <div class="weather-overview">
-      <h3>天气概览</h3>
-      <div v-if="latestWeather">
-        <p><strong>城市：</strong>{{ latestWeather.city }}</p>
-        <p><strong>温度：</strong>{{ latestWeather.temperature }}°C</p>
-        <p><strong>天气：</strong>{{ latestWeather.condition }}</p>
-        <p><strong>更新时间：</strong>{{ formatDate(latestWeather.timestamp) }}</p>
-      </div>
-      <p v-else-if="error">{{ error }}</p>
-      <p v-else>加载中...</p>
-      <button @click="refreshData">刷新数据</button>
+  <div class="weather-overview">
+    <h3>天气概览</h3>
+    <div v-if="latestWeather">
+      <p><strong>城市：</strong>{{ latestWeather.city }}</p>
+      <p><strong>天气：</strong>{{ latestWeather.dailyWeatherList[0].wea }}</p>
+      <p><strong>温度：</strong>{{ latestWeather.dailyWeatherList[0].temDay }}°C / {{ latestWeather.dailyWeatherList[0].temNight }}°C</p>
+      <p><strong>更新时间：</strong>{{ formatDate(latestWeather.updateTime) }}</p>
     </div>
-  </template>
-  
-  <script>
-  import { ref, onMounted } from 'vue';
-  import { useStore } from 'vuex';
-  
-  export default {
-    name: 'WeatherOverview',
-    setup() {
-      const store = useStore();
-      const latestWeather = ref(null);
-      const error = ref(null);
-  
-      const fetchLatestWeather = async () => {
-        try {
-          await store.dispatch('weather/fetchLatestWeather');
-          latestWeather.value = store.getters['weather/getLatestWeather'];
-          error.value = null;
-        } catch (err) {
-          console.error('获取最新天气数据失败:', err);
-          error.value = err.message || '获取最新天气数据失败';
-          latestWeather.value = null;
-        }
-      };
-  
-      const refreshData = async () => {
-        await fetchLatestWeather();
-      };
-  
-      const formatDate = (timestamp) => {
-        return new Date(timestamp).toLocaleString();
-      };
-  
-      onMounted(fetchLatestWeather);
-  
-      return {
-        latestWeather,
-        error,
-        refreshData,
-        formatDate
-      };
+    <p v-else-if="error">{{ error }}</p>
+    <p v-else>加载中...</p>
+  </div>
+</template>
+
+<script>
+import { ref, onMounted, watch } from 'vue';
+
+export default {
+  name: 'WeatherOverview',
+  props: {
+    weatherData: {
+      type: Object,
+      default: null
     }
-  };
-  </script>
-  
-  <style scoped>
-  .weather-overview {
-    background-color: #f0f0f0;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
+  },
+  setup(props) {
+    const latestWeather = ref(null);
+    const error = ref(null);
+
+    const formatDate = (timestamp) => {
+      return new Date(timestamp).toLocaleString();
+    };
+
+    watch(() => props.weatherData, (newData) => {
+      if (newData) {
+        latestWeather.value = newData;
+        error.value = null;
+      }
+    });
+
+    return {
+      latestWeather,
+      error,
+      formatDate
+    };
   }
-  
-  button {
-    margin-top: 10px;
-  }
-  </style>
+};
+</script>
+
+<style scoped>
+.weather-overview {
+  background-color: #f0f0f0;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+</style>
