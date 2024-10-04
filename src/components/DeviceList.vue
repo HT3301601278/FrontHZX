@@ -5,15 +5,16 @@
         <thead>
           <tr>
             <th>设备名称</th>
-            <th>设备类型</th>
+            <th>设备位置</th>
             <th>操作</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="device in devices" :key="device.id">
             <td>{{ device.name }}</td>
-            <td>{{ device.type }}</td>
+            <td>{{ device.location }}</td>
             <td>
+              <button @click="$emit('view-device', device)">查看</button>
               <button @click="$emit('delete-device', device.id)">删除</button>
             </td>
           </tr>
@@ -31,7 +32,7 @@
         required: true
       }
     },
-    emits: ['delete-device']
+    emits: ['delete-device', 'view-device']
   };
   </script>
   
@@ -56,14 +57,6 @@
   }
   
   button {
-    background-color: #f44336;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    cursor: pointer;
-  }
-  
-  button:hover {
-    background-color: #d32f2f;
+    margin-right: 5px;
   }
   </style>

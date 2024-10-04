@@ -19,3 +19,13 @@ export const login = async (credentials) => {
     throw error.response?.data || error.message || '登录失败';
   }
 };
+
+// 新增的 updateUser 方法
+export const updateUser = async (id, userData) => {
+  try {
+    const response = await axios.put(`${API_URL}/users/${id}`, userData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message || '更新用户信息失败';
+  }
+};

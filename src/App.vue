@@ -1,12 +1,14 @@
 <template>
   <div id="app">
-    <nav v-if="isAuthenticated">
+    <nav v-if="$route.path !== '/'">
       <router-link to="/dashboard">仪表盘</router-link> |
       <router-link to="/weather-detail">天气详情</router-link> |
       <router-link to="/device-management">设备管理</router-link> |
-      <router-link to="/user-profile">用户信息</router-link> |
-      <a href="#" @click.prevent="logout">退出登录</a>
+      <router-link to="/user-profile">用户信息</router-link>
+      <button @click="logout" class="logout-btn">退出登录</button>
     </nav>
+    <GlobalError />
+    <GlobalLoading />
     <router-view/>
   </div>
 </template>
@@ -15,9 +17,15 @@
 import { computed } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import GlobalError from '@/components/GlobalError.vue'
+import GlobalLoading from '@/components/GlobalLoading.vue'
 
 export default {
   name: 'App',
+  components: {
+    GlobalError,
+    GlobalLoading
+  },
   setup() {
     const store = useStore()
     const router = useRouter()
@@ -107,5 +115,20 @@ th, td {
 th {
   background-color: #f2f2f2;
   font-weight: bold;
+}
+
+.logout-btn {
+  float: right;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 4px;
+}
+
+.logout-btn:hover {
+  background-color: #d32f2f;
 }
 </style>

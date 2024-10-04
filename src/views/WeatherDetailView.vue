@@ -1,10 +1,12 @@
 <template>
     <div class="weather-detail-view">
       <h2>天气数据详情</h2>
+      <button @click="refreshWeatherData">刷新数据</button>
       <CitySelector @city-changed="handleCityChange" />
       <DateRangePicker @date-range-changed="handleDateRangeChange" />
-      <WeatherChart :chartData="chartData" />
-      <WeatherDataList :weatherData="weatherData" />
+      <div v-if="error" class="error-message">{{ error }}</div>
+      <WeatherChart v-if="!error" :chartData="chartData" />
+      <WeatherDataList v-if="!error" :weatherData="weatherData" />
     </div>
   </template>
   
@@ -30,16 +32,25 @@
       const weatherData = ref([]);
       const selectedCity = ref('');
       const dateRange = ref({ startDate: '', endDate: '' });
+      const error = ref(null);
 
       const fetchWeatherData = async () => {
         if (selectedCity.value && dateRange.value.startDate && dateRange.value.endDate) {
-          await store.dispatch('weather/fetchWeatherData', {
-            city: selectedCity.value,
-            startDate: dateRange.value.startDate,
-            endDate: dateRange.value.endDate
-          });
-          chartData.value = store.getters['weather/getChartData'];
-          weatherData.value = store.getters['weather/getWeatherData'];
+          try {
+            await store.dispatch('weather/fetchWeatherByCityAndDateRange', {
+              city: selectedCity.value,
+              startDate: dateRange.value.startDate,
+              endDate: dateRange.value.endDate
+            });
+            chartData.value = store.getters['weather/getChartData'];
+            weatherData.value = store.getters['weather/getWeatherData'];
+            error.value = null;
+          } catch (err) {
+            console.error('获取天气数据失败:', err);
+            error.value = err.message || '获取天气数据失败';
+            chartData.value = null;
+            weatherData.value = [];
+          }
         }
       };
 
@@ -53,8 +64,11 @@
         fetchWeatherData();
       };
 
+      const refreshWeatherData = async () => {
+        await fetchWeatherData();
+      };
+
       onMounted(() => {
-        // 初始加载数据，可以设置默认值
         selectedCity.value = '北京';
         const today = new Date();
         const oneWeekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -68,8 +82,10 @@
       return {
         chartData,
         weatherData,
+        error,
         handleCityChange,
-        handleDateRangeChange
+        handleDateRangeChange,
+        refreshWeatherData
       };
     }
   };
@@ -78,5 +94,9 @@
   <style scoped>
   .weather-detail-view {
     padding: 20px;
+  }
+  .error-message {
+    color: red;
+    margin-bottom: 10px;
   }
   </style>

@@ -7,6 +7,7 @@
         <p><strong>天气：</strong>{{ latestWeather.condition }}</p>
         <p><strong>更新时间：</strong>{{ formatDate(latestWeather.timestamp) }}</p>
       </div>
+      <p v-else-if="error">{{ error }}</p>
       <p v-else>加载中...</p>
       <button @click="refreshData">刷新数据</button>
     </div>
@@ -21,10 +22,18 @@
     setup() {
       const store = useStore();
       const latestWeather = ref(null);
+      const error = ref(null);
   
       const fetchLatestWeather = async () => {
-        await store.dispatch('weather/fetchLatestWeather');
-        latestWeather.value = store.getters['weather/getLatestWeather'];
+        try {
+          await store.dispatch('weather/fetchLatestWeather');
+          latestWeather.value = store.getters['weather/getLatestWeather'];
+          error.value = null;
+        } catch (err) {
+          console.error('获取最新天气数据失败:', err);
+          error.value = err.message || '获取最新天气数据失败';
+          latestWeather.value = null;
+        }
       };
   
       const refreshData = async () => {
@@ -39,6 +48,7 @@
   
       return {
         latestWeather,
+        error,
         refreshData,
         formatDate
       };

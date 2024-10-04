@@ -1,4 +1,4 @@
-import { register, login } from '@/api/user';
+import { register, login, updateUser } from '@/api/user';
 
 export default {
   namespaced: true,
@@ -48,6 +48,16 @@ export default {
     },
     logout({ commit }) {
       commit('CLEAR_USER');
+    },
+    async updateProfile({ commit, state }, userData) {
+      try {
+        const response = await updateUser(state.user.id, userData);
+        commit('SET_USER', response);
+        return response;
+      } catch (error) {
+        console.error('Update profile error:', error);
+        throw error.response?.data || error.message || '更新用户信息失败';
+      }
     },
   },
   getters: {
