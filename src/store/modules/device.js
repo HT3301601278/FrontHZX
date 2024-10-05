@@ -28,6 +28,13 @@ export default {
     async fetchDevices({ commit }) {
       try {
         const response = await axios.get(`${API_URL}/devices`);
+        console.log('API response:', response.data);
+        // 检查每个设备是否有id属性
+        response.data.forEach((device, index) => {
+          if (!device.id) {
+            console.error(`Device at index ${index} from API has no id:`, device);
+          }
+        });
         commit('SET_DEVICES', response.data);
       } catch (error) {
         console.error('Error fetching devices:', error);
@@ -45,11 +52,15 @@ export default {
       }
     },
     async deleteDevice({ commit }, deviceId) {
+      console.log('Store: Deleting device with ID:', deviceId);
       try {
+        console.log('Store: Sending DELETE request to:', `${API_URL}/devices/${deviceId}`);
         await axios.delete(`${API_URL}/devices/${deviceId}`);
+        console.log('Store: DELETE request successful');
         commit('REMOVE_DEVICE', deviceId);
+        return '设备删除成功';
       } catch (error) {
-        console.error('Error deleting device:', error);
+        console.error('Store: Error deleting device:', error);
         throw error;
       }
     },

@@ -1,13 +1,37 @@
 <template>
     <div class="weather-detail-view">
-      <h2>天气数据详情</h2>
-      <CitySelector @city-selected="handleCitySelected" />
-      <DateRangePicker @date-range-changed="handleDateRangeChange" />
-      <el-button type="primary" @click="fetchWeatherData" :disabled="!selectedCity.name || !dateRange.startDate || !dateRange.endDate">查询</el-button>
-      <el-button type="primary" @click="updateWeatherData" :disabled="!selectedCity.id">更新数据</el-button>
-      <div v-if="error" class="error-message">{{ error }}</div>
-      <WeatherChart v-if="!error && chartData" :chartData="chartData" />
-      <WeatherDataList v-if="!error && weatherData.length" :weatherData="weatherData" />
+      <el-card class="weather-card">
+        <template #header>
+          <div class="card-header">
+            <h2>天气数据详情</h2>
+          </div>
+        </template>
+        <el-form :inline="true" class="demo-form-inline">
+          <el-form-item>
+            <CitySelector @city-selected="handleCitySelected" />
+          </el-form-item>
+          <el-form-item>
+            <DateRangePicker @date-range-changed="handleDateRangeChange" />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="success" @click="updateWeatherData" :disabled="!selectedCity.id">更新数据</el-button>
+            <el-button type="primary" @click="fetchWeatherData" :disabled="!selectedCity.name || !dateRange.startDate || !dateRange.endDate">查询</el-button>
+          </el-form-item>
+        </el-form>
+        <el-alert
+          v-if="error"
+          :title="error"
+          type="error"
+          show-icon
+          :closable="false"
+        />
+        <div v-if="!error && chartData" class="chart-container">
+          <WeatherChart :chartData="chartData" />
+        </div>
+        <div v-if="!error && weatherData.length" class="data-list-container">
+          <WeatherDataList :weatherData="weatherData" />
+        </div>
+      </el-card>
     </div>
   </template>
   
@@ -140,9 +164,73 @@
   <style scoped>
   .weather-detail-view {
     padding: 20px;
+    background-color: #f0f8ff;
+    min-height: 100vh;
   }
-  .error-message {
-    color: red;
-    margin-bottom: 10px;
+
+  .weather-card {
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+  }
+
+  .weather-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .card-header h2 {
+    margin: 0;
+    color: #1e90ff;
+  }
+
+  .chart-container, .data-list-container {
+    margin-top: 20px;
+  }
+
+  :deep(.el-card__header) {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  :deep(.el-button--primary) {
+    background-color: #1e90ff;
+    border-color: #1e90ff;
+  }
+
+  :deep(.el-button--primary:hover) {
+    background-color: #187bcd;
+    border-color: #187bcd;
+  }
+
+  :deep(.el-button--success) {
+    background-color: #42b983;
+    border-color: #42b983;
+  }
+
+  :deep(.el-button--success:hover) {
+    background-color: #3aa876;
+    border-color: #3aa876;
+  }
+
+  :deep(.el-form-item) {
+    margin-bottom: 15px;
+  }
+
+  :deep(.el-form--inline .el-form-item) {
+    margin-right: 0;
+    margin-bottom: 15px;
+  }
+
+  :deep(.el-form--inline) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
   }
   </style>

@@ -68,4 +68,8 @@ export default {
   gap: 10px;
   margin-bottom: 20px;
 }
+
+:deep(.el-select) {
+  width: 180px;
+}
 </style>
